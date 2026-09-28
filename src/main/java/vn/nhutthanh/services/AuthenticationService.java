@@ -1,0 +1,52 @@
+package vn.nhutthanh.services;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import vn.nhutthanh.entity.User;
+import vn.nhutthanh.models.LoginUserModel;
+import vn.nhutthanh.models.RegisterUserModel;
+import vn.nhutthanh.repository.UserRepository;
+
+@Service
+public class AuthenticationService {
+    private final UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final AuthenticationManager authenticationManager;
+
+    public AuthenticationService(
+        UserRepository userRepository,
+        AuthenticationManager authenticationManager,
+        PasswordEncoder passwordEncoder
+    ) {
+        this.authenticationManager = authenticationManager;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public User signup(RegisterUserModel input) {
+        User user = new User();
+        user.setFullName(input.getFullName());
+        user.setEmail(input.getEmail());
+        user.setImages("u1.jpg");
+        user.setPassword(passwordEncoder.encode(input.getPassword()));
+
+        return userRepository.save(user);
+    }
+
+    public User authenticate(LoginUserModel input) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        input.getEmail(),
+                        input.getPassword()
+                )
+        );
+
+        return userRepository.findByEmail(input.getEmail())
+                .orElseThrow();
+    }
+}
